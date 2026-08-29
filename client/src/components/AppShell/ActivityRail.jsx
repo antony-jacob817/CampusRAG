@@ -15,58 +15,56 @@ export default function ActivityRail() {
   const currentPath = router.pathname;
   const isAdmin = user?.role === 'admin';
 
-  // Base navigation items available to all users (Student & Admin)
-  const baseNavItems = [
-    { 
-      id: 'chat', 
-      label: 'Academic Assistant', 
-      href: '/chat', 
-      icon: Sparkles, 
-      active: currentPath.startsWith('/chat'),
-      iconColor: 'text-[#10B981]',
-      activeBorder: 'border-[#10B981]/60 shadow-[0_0_15px_rgba(16,185,129,0.25)]',
-      indicatorColor: 'bg-[#10B981]'
-    },
-  ];
+  // Navigation items based on user role
+  const chatNavItem = { 
+    id: 'chat', 
+    label: 'Academic Assistant', 
+    href: '/chat', 
+    icon: Sparkles, 
+    active: currentPath.startsWith('/chat'),
+    iconColor: 'text-[#10B981]',
+    activeBorder: 'border-[#10B981]/60 shadow-[0_0_15px_rgba(16,185,129,0.25)]',
+    indicatorColor: 'bg-[#10B981]'
+  };
 
-  // Admin-only telemetry and ingestion items
-  const adminNavItems = isAdmin ? [
-    { 
-      id: 'analytics', 
-      label: 'Admin Analytics', 
-      href: '/admin/dashboard', 
-      icon: ShieldCheck, 
-      active: currentPath === '/admin/dashboard',
-      iconColor: 'text-[#F59E0B]',
-      activeBorder: 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.25)]',
-      indicatorColor: 'bg-[#F59E0B]'
-    },
-    { 
-      id: 'documents', 
-      label: 'Document Knowledge Base', 
-      href: '/admin/documents', 
-      icon: Database, 
-      active: currentPath === '/admin/documents',
-      iconColor: 'text-[#10B981]',
-      activeBorder: 'border-[#10B981]/60 shadow-[0_0_15px_rgba(16,185,129,0.25)]',
-      indicatorColor: 'bg-[#10B981]'
-    },
-  ] : [];
+  const adminAnalyticsNavItem = { 
+    id: 'analytics', 
+    label: 'Admin Analytics', 
+    href: '/admin/dashboard', 
+    icon: ShieldCheck, 
+    active: currentPath === '/admin/dashboard',
+    iconColor: 'text-[#F59E0B]',
+    activeBorder: 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.25)]',
+    indicatorColor: 'bg-[#F59E0B]'
+  };
 
-  const settingsNavItem = [
-    { 
-      id: 'settings', 
-      label: 'Account Settings', 
-      href: '/settings', 
-      icon: User, 
-      active: currentPath === '/settings',
-      iconColor: 'text-[#94A3B8]',
-      activeBorder: 'border-slate-400/60 shadow-[0_0_15px_rgba(148,163,184,0.2)]',
-      indicatorColor: 'bg-[#94A3B8]'
-    },
-  ];
+  const adminDocumentsNavItem = { 
+    id: 'documents', 
+    label: 'Document Knowledge Base', 
+    href: '/admin/documents', 
+    icon: Database, 
+    active: currentPath === '/admin/documents',
+    iconColor: 'text-[#10B981]',
+    activeBorder: 'border-[#10B981]/60 shadow-[0_0_15px_rgba(16,185,129,0.25)]',
+    indicatorColor: 'bg-[#10B981]'
+  };
 
-  const visibleNavItems = [...baseNavItems, ...adminNavItems, ...settingsNavItem];
+  const settingsNavItem = { 
+    id: 'settings', 
+    label: 'Account Settings', 
+    href: '/settings', 
+    icon: User, 
+    active: currentPath === '/settings',
+    iconColor: 'text-[#94A3B8]',
+    activeBorder: 'border-slate-400/60 shadow-[0_0_15px_rgba(148,163,184,0.2)]',
+    indicatorColor: 'bg-[#94A3B8]'
+  };
+
+  // For Admin: Analytics -> Documents -> Chat (below documents) -> Settings
+  // For Student: Chat -> Settings
+  const visibleNavItems = isAdmin
+    ? [adminAnalyticsNavItem, adminDocumentsNavItem, chatNavItem, settingsNavItem]
+    : [chatNavItem, settingsNavItem];
 
   return (
     <aside className="hidden lg:flex flex-col items-center justify-between w-14 h-full bg-white dark:bg-[#090D16] border-r border-[#E2E8F0] dark:border-[#1F2937] py-4 z-20 shrink-0 select-none">
