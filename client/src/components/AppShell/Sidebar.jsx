@@ -35,14 +35,9 @@ export default function Sidebar({ isOpen, onClose }) {
 
 
 
-  const handleNewChat = async () => {
-    try {
-      const newThread = await createThread('New Academic Query', 'all');
-      router.push(`/chat/${newThread._id || newThread.id}`);
-      if (onClose) onClose();
-    } catch (e) {
-      console.error('Failed to create thread:', e);
-    }
+  const handleNewChat = () => {
+    router.push('/chat?new=true');
+    if (onClose) onClose();
   };
 
   const handleSelectThread = (threadId) => {

@@ -39,11 +39,7 @@ export default function MyApp({ Component, pageProps }) {
         }
 
         try {
-          const { createThread } = useChatStore.getState();
-          const newThread = await createThread('New Academic Query', 'all');
-          const threadId = newThread._id || newThread.id;
-          
-          await router.push(`/chat/${threadId}`);
+          await router.push('/chat?new=true');
           
           // Focus the query prompt input automatically
           setTimeout(() => {
@@ -53,7 +49,7 @@ export default function MyApp({ Component, pageProps }) {
           }, 200);
         } catch (err) {
           isCreatingThread = false;
-          console.error('Failed to create academic thread on Shift+Q shortcut:', err);
+          console.error('Failed to navigate on Shift+Q shortcut:', err);
           router.push('/chat');
         }
       }

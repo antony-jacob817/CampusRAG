@@ -61,7 +61,35 @@ const EXPLORATION_CARDS = {
 
 export default function ChatIndexPage() {
   const router = useRouter();
-  const { selectedDepartment, createThread, sendMessageStream } = useChatStore();
+  const { 
+    threads, 
+    activeThread, 
+    selectedDepartment, 
+    createThread, 
+    sendMessageStream, 
+    fetchThreads 
+  } = useChatStore();
+
+  const isExplicitNewChat = router.query.new === 'true';
+
+  // Automatically activate the latest chat by default unless explicitly creating a new chat
+  React.useEffect(() => {
+    if (!isExplicitNewChat) {
+      if (activeThread && (activeThread._id || activeThread.id)) {
+        router.replace(`/chat/${activeThread._id || activeThread.id}`);
+      } else if (threads && threads.length > 0) {
+        const latest = threads[0];
+        router.replace(`/chat/${latest._id || latest.id}`);
+      } else {
+        fetchThreads().then(() => {
+          const latestThreads = useChatStore.getState().threads;
+          if (latestThreads && latestThreads.length > 0) {
+            router.replace(`/chat/${latestThreads[0]._id || latestThreads[0].id}`);
+          }
+        });
+      }
+    }
+  }, [isExplicitNewChat, activeThread, threads, fetchThreads, router]);
 
   const activeDomain = selectedDepartment || 'all';
   const currentCards = EXPLORATION_CARDS[activeDomain] || EXPLORATION_CARDS.all;
