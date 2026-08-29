@@ -17,7 +17,10 @@ import {
   Database,
   Layers,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  CheckCircle2,
+  ExternalLink,
+  ShieldAlert
 } from 'lucide-react';
 import AppShell from '../components/AppShell/AppShell';
 
@@ -30,6 +33,14 @@ const DEPARTMENTS = [
   { id: 'general', label: 'General Sciences & Humanities' },
 ];
 
+const KNOWN_TEMP_DOMAINS = [
+  'mailinator.com', 'tempmail.com', '10minutemail.com', 'guerrillamail.com',
+  'sharklasers.com', 'yopmail.com', 'throwawaymail.com', 'trashmail.com',
+  'dispostable.com', 'fakeinbox.com', 'temp-mail.org', 'getnada.com',
+  'mohmal.com', 'crazymailing.com', 'inboxkitten.com', 'mytemp.email',
+  'tempail.com', 'burnermail.io', 'emailondeck.com'
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated, error, clearError, isLoading } = useAuthStore();
@@ -40,12 +51,19 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [department, setDepartment] = useState('academics');
   const [localError, setLocalError] = useState('');
+  const [registeredVerification, setRegisteredVerification] = useState(null); // { user, verificationLink, message }
 
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/chat');
     }
   }, [isAuthenticated, router]);
+
+  const isTempEmail = (emailStr) => {
+    if (!emailStr.includes('@')) return false;
+    const domain = emailStr.split('@')[1]?.toLowerCase();
+    return KNOWN_TEMP_DOMAINS.some((d) => domain?.includes(d));
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -55,6 +73,10 @@ export default function RegisterPage() {
     }
     if (password.length < 6) {
       setLocalError('Password must be at least 6 characters.');
+      return;
+    }
+    if (isTempEmail(email)) {
+      setLocalError('Temporary/disposable email addresses are not permitted. Please use your official campus or personal email address.');
       return;
     }
 
@@ -69,7 +91,11 @@ export default function RegisterPage() {
     });
 
     if (result.success) {
-      router.push('/chat');
+      setRegisteredVerification({
+        user: result.user,
+        verificationLink: result.verificationLink,
+        message: result.message,
+      });
     }
   };
 
@@ -163,121 +189,180 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Right Column: Register Card */}
+          {/* Right Column: Register Card or Verification Modal */}
           <div className="lg:col-span-5 w-full max-w-md mx-auto">
             <div className="bg-white/95 dark:bg-[#111827]/95 backdrop-blur-2xl rounded-3xl border border-[#E2E8F0] dark:border-[#1F2937] p-7 sm:p-8 shadow-2xl space-y-5">
               
-              <div className="space-y-1.5 text-center">
-                <div className="inline-flex items-center space-x-2 text-xs font-bold text-[#059669] dark:text-[#10B981] mb-1">
-                  <div className="w-5 h-5 rounded-lg overflow-hidden border border-[#10B981]/40 flex items-center justify-center">
-                    <img src="/logo.png" alt="CampusRAG Logo" className="w-full h-full object-contain" />
+              {registeredVerification ? (
+                /* Verification Step Required */
+                <div className="text-center space-y-5 animate-fade-in">
+                  <div className="w-16 h-16 rounded-full bg-[#ECFDF5] dark:bg-[#064E3B]/40 border border-[#A7F3D0] dark:border-[#065F46] flex items-center justify-center mx-auto text-[#059669] dark:text-[#10B981] shadow-lg shadow-[#10B981]/20">
+                    <Mail className="w-8 h-8" />
                   </div>
-                  <span>CampusRAG</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] dark:text-[#F9FAFB] tracking-tight">
-                  Create an account
-                </h1>
-              </div>
 
-              {(error || localError) && (
-                <div className="flex items-center space-x-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-2xl text-xs text-rose-700 dark:text-rose-300 animate-fade-in">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>Error: {error || localError}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Rachel Adams"
-                    className="w-full px-4 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition placeholder-[#64748B] dark:placeholder-[#9CA3AF]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
-                    Campus Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@campus.edu"
-                    className="w-full px-4 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition placeholder-[#64748B] dark:placeholder-[#9CA3AF]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
-                    Department / Academic Program
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition appearance-none cursor-pointer"
-                    >
-                      {DEPARTMENTS.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-[#64748B] dark:text-[#9CA3AF] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <div className="space-y-1.5">
+                    <h2 className="text-xl font-extrabold text-[#0F172A] dark:text-[#F9FAFB] tracking-tight">
+                      Verify Your Email Address
+                    </h2>
+                    <p className="text-xs text-[#64748B] dark:text-[#9CA3AF]">
+                      An official verification link has been generated for <strong>{email}</strong>.
+                    </p>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="•••••••• (min 6 chars)"
-                      className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition placeholder-[#64748B] dark:placeholder-[#9CA3AF]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] transition"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                  <div className="p-4 rounded-2xl bg-[#F8FAFC] dark:bg-[#090D16] border border-[#E2E8F0] dark:border-[#1F2937] text-left space-y-2 text-xs">
+                    <div className="flex items-center space-x-2 text-[#059669] dark:text-[#10B981] font-bold">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Security Validation Required</span>
+                    </div>
+                    <p className="text-[11px] text-[#64748B] dark:text-[#9CA3AF]">
+                      To prevent unauthorized access and disposable temporary accounts, you must verify this email address before logging in.
+                    </p>
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white dark:text-[#090D16] bg-[#059669] dark:bg-[#10B981] hover:bg-[#047857] dark:hover:bg-[#059669] shadow-md shadow-[#10B981]/25 transition active:scale-[0.98] flex items-center justify-center space-x-2 disabled:opacity-50 mt-2"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <span>Register Student Account</span>
+                  {registeredVerification.verificationLink && (
+                    <div className="space-y-2 pt-1">
+                      <a
+                        href={registeredVerification.verificationLink}
+                        className="w-full inline-flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-[#059669] dark:bg-[#10B981] hover:bg-[#047857] dark:hover:bg-[#059669] text-white dark:text-[#090D16] font-bold text-xs shadow-md shadow-[#10B981]/25 transition active:scale-95"
+                      >
+                        <span>Click to Verify Email & Enter</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
                   )}
-                </button>
-              </form>
 
-              <div className="pt-2 text-center text-xs text-[#64748B] dark:text-[#9CA3AF]">
-                Already have an account?{' '}
-                <Link href="/login" className="font-bold text-[#059669] dark:text-[#10B981] hover:underline">
-                  Sign in
-                </Link>
-              </div>
+                  <div className="pt-2 text-center text-xs text-[#64748B] dark:text-[#9CA3AF]">
+                    <Link href="/login" className="font-semibold hover:text-[#0F172A] dark:hover:text-[#F9FAFB] transition">
+                      Proceed to Sign In
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                /* Registration Form */
+                <>
+                  <div className="space-y-1.5 text-center">
+                    <div className="inline-flex items-center space-x-2 text-xs font-bold text-[#059669] dark:text-[#10B981] mb-1">
+                      <div className="w-5 h-5 rounded-lg overflow-hidden border border-[#10B981]/40 flex items-center justify-center">
+                        <img src="/logo.png" alt="CampusRAG Logo" className="w-full h-full object-contain" />
+                      </div>
+                      <span>CampusRAG</span>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] dark:text-[#F9FAFB] tracking-tight">
+                      Create an account
+                    </h1>
+                    <p className="text-xs text-[#64748B] dark:text-[#9CA3AF]">
+                      Disposable/temporary emails are automatically blocked.
+                    </p>
+                  </div>
+
+                  {(error || localError) && (
+                    <div className="flex items-start space-x-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-2xl text-xs text-rose-700 dark:text-rose-300 animate-fade-in">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{error || localError}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-3.5">
+                    <div>
+                      <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. Rachel Adams"
+                        className="w-full px-4 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition placeholder-[#64748B] dark:placeholder-[#9CA3AF]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
+                        Campus Email Address (No Temp Mails)
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (isTempEmail(e.target.value)) {
+                            setLocalError('Temporary/disposable email addresses are blocked.');
+                          } else if (localError) {
+                            setLocalError('');
+                          }
+                        }}
+                        placeholder="student@campus.edu"
+                        className="w-full px-4 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition placeholder-[#64748B] dark:placeholder-[#9CA3AF]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
+                        Department / Academic Program
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={department}
+                          onChange={(e) => setDepartment(e.target.value)}
+                          className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition appearance-none cursor-pointer"
+                        >
+                          {DEPARTMENTS.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-[#64748B] dark:text-[#9CA3AF] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="•••••••• (min 6 chars)"
+                          className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition placeholder-[#64748B] dark:placeholder-[#9CA3AF]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] transition"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white dark:text-[#090D16] bg-[#059669] dark:bg-[#10B981] hover:bg-[#047857] dark:hover:bg-[#059669] shadow-md shadow-[#10B981]/25 transition active:scale-[0.98] flex items-center justify-center space-x-2 disabled:opacity-50 mt-2"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <span>Create Verified Account</span>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="pt-2 text-center text-xs text-[#64748B] dark:text-[#9CA3AF]">
+                    Already have an account?{' '}
+                    <Link href="/login" className="font-bold text-[#059669] dark:text-[#10B981] hover:underline">
+                      Sign in
+                    </Link>
+                  </div>
+                </>
+              )}
 
             </div>
           </div>
@@ -289,11 +374,11 @@ export default function RegisterPage() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2 text-[#0F172A] dark:text-[#F9FAFB] font-semibold">
               <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
-              <span>System Status: All Systems Operational</span>
+              <span>Email Verification Gateway Active</span>
             </div>
             <div className="hidden sm:flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-              <span>Data Integrity: Verified</span>
+              <span>Disposable Domain Blocker: Enabled</span>
             </div>
           </div>
 

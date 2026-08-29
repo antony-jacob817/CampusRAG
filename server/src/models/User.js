@@ -31,6 +31,24 @@ const userSchema = new mongoose.Schema(
       enum: ['admissions', 'academics', 'examinations', 'hostel', 'placements', 'general'],
       default: 'general',
     },
+    nameUpdatedAt: {
+      type: Date,
+      default: null,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
     lastLogin: {
       type: Date,
     },

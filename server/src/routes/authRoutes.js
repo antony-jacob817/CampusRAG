@@ -26,6 +26,34 @@ router.post(
   authController.login
 );
 
+router.post(
+  '/verify-email',
+  [
+    body('token').optional().isString().trim(),
+  ],
+  authController.verifyEmail
+);
+
+router.get('/verify-email', authController.verifyEmail);
+
+router.post(
+  '/resend-verification',
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email address is required.'),
+  ],
+  authController.resendVerification
+);
+
+router.put(
+  '/profile',
+  authMiddleware,
+  [
+    body('name').optional().isString().trim(),
+    body('department').optional().isString().trim(),
+  ],
+  authController.updateProfile
+);
+
 router.get('/me', authMiddleware, authController.getMe);
 
 module.exports = router;

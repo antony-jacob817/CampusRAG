@@ -139,6 +139,8 @@ const seedInitialData = async () => {
         password: hashedPasswordStudent,
         role: 'student',
         department: 'academics',
+        isEmailVerified: true,
+        nameUpdatedAt: null,
         createdAt: new Date(),
       });
       console.log('[Seed] Demo student account created: student@campus.edu / Student@123');
@@ -153,6 +155,8 @@ const seedInitialData = async () => {
         password: hashedPasswordAdmin,
         role: 'admin',
         department: 'general',
+        isEmailVerified: true,
+        nameUpdatedAt: null,
         createdAt: new Date(),
       });
       console.log('[Seed] Demo admin account created: admin@campus.edu / Admin@123');
@@ -166,8 +170,13 @@ const seedInitialData = async () => {
         password: 'Student@123',
         role: 'student',
         department: 'academics',
+        isEmailVerified: true,
+        nameUpdatedAt: null,
       });
       console.log('[Seed] Demo student account seeded in MongoDB: student@campus.edu / Student@123');
+    } else if (!existingStudent.isEmailVerified) {
+      existingStudent.isEmailVerified = true;
+      await existingStudent.save();
     }
 
     const existingAdmin = await User.findOne({ email: adminEmail });
@@ -178,8 +187,13 @@ const seedInitialData = async () => {
         password: 'Admin@123',
         role: 'admin',
         department: 'general',
+        isEmailVerified: true,
+        nameUpdatedAt: null,
       });
       console.log('[Seed] Demo admin account seeded in MongoDB: admin@campus.edu / Admin@123');
+    } else if (!existingAdmin.isEmailVerified) {
+      existingAdmin.isEmailVerified = true;
+      await existingAdmin.save();
     }
   }
 

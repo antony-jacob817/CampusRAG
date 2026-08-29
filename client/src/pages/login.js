@@ -16,18 +16,23 @@ import {
   Database,
   Cpu,
   Activity,
-  Layers
+  Layers,
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 import AppShell from '../components/AppShell/AppShell';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, error, clearError, isLoading } = useAuthStore();
+  const { login, resendVerification, isAuthenticated, error, clearError, isLoading } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
+  
+  const [unverifiedState, setUnverifiedState] = useState(null); // { email: string, msg?: string, link?: string }
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -44,16 +49,39 @@ export default function LoginPage() {
     }
 
     setLocalError('');
+    setUnverifiedState(null);
     clearError();
+
     const result = await login(email.trim(), password);
     if (result.success) {
       const redirect = router.query.redirect || (result.user.role === 'admin' ? '/admin/dashboard' : '/chat');
       router.push(redirect);
+    } else if (result.unverified) {
+      setUnverifiedState({
+        email: result.email || email.trim(),
+        msg: result.error,
+      });
+    }
+  };
+
+  const handleResendFromLogin = async () => {
+    if (!unverifiedState?.email) return;
+    setIsResending(true);
+    const res = await resendVerification(unverifiedState.email);
+    setIsResending(false);
+
+    if (res.success) {
+      setUnverifiedState((prev) => ({
+        ...prev,
+        link: res.verificationLink,
+        sent: true,
+      }));
     }
   };
 
   const handleQuickLogin = async (role) => {
     setLocalError('');
+    setUnverifiedState(null);
     clearError();
     if (role === 'student') {
       setEmail('student@campus.edu');
@@ -96,13 +124,11 @@ export default function LoginPage() {
 
                 {/* SVG Isometric Node Graph */}
                 <svg className="w-full h-full p-4" viewBox="0 0 500 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Connecting Lines with animated pulses */}
                   <line x1="140" y1="120" x2="250" y2="150" stroke="#10B981" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse opacity-60" />
                   <line x1="360" y1="110" x2="250" y2="150" stroke="#10B981" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse opacity-60" />
                   <line x1="150" y1="210" x2="250" y2="150" stroke="#6366F1" strokeWidth="2" strokeDasharray="4 4" className="opacity-50" />
                   <line x1="350" y1="200" x2="250" y2="150" stroke="#10B981" strokeWidth="2" strokeDasharray="4 4" className="opacity-60" />
                   
-                  {/* Left Node 1 (Admissions) */}
                   <g className="hover:scale-105 transition-transform">
                     <rect x="110" y="90" width="60" height="60" rx="14" fill="#111827" stroke="#1F2937" strokeWidth="2" />
                     <rect x="115" y="95" width="50" height="50" rx="10" fill="#0F172A" stroke="#10B981" strokeWidth="1" strokeDasharray="2 2" />
@@ -110,7 +136,6 @@ export default function LoginPage() {
                     <circle cx="140" cy="120" r="4" fill="#10B981" />
                   </g>
 
-                  {/* Center Node (Orchestrator Hub) */}
                   <g className="hover:scale-105 transition-transform">
                     <rect x="210" y="110" width="80" height="80" rx="20" fill="#111827" stroke="#10B981" strokeWidth="2" className="shadow-lg" />
                     <rect x="218" y="118" width="64" height="64" rx="14" fill="#090D16" stroke="#10B981" strokeWidth="1.5" />
@@ -119,7 +144,6 @@ export default function LoginPage() {
                     <circle cx="250" cy="150" r="24" stroke="#10B981" strokeWidth="1" strokeDasharray="3 3" className="animate-spin origin-center" />
                   </g>
 
-                  {/* Right Node 1 (Examinations) */}
                   <g className="hover:scale-105 transition-transform">
                     <rect x="330" y="80" width="60" height="60" rx="14" fill="#111827" stroke="#1F2937" strokeWidth="2" />
                     <rect x="335" y="85" width="50" height="50" rx="10" fill="#0F172A" stroke="#6366F1" strokeWidth="1" strokeDasharray="2 2" />
@@ -127,14 +151,12 @@ export default function LoginPage() {
                     <circle cx="360" cy="110" r="4" fill="#6366F1" />
                   </g>
 
-                  {/* Left Node 2 (Hostel) */}
                   <g className="hover:scale-105 transition-transform">
                     <rect x="120" y="180" width="60" height="60" rx="14" fill="#111827" stroke="#1F2937" strokeWidth="2" />
                     <rect x="125" y="185" width="50" height="50" rx="10" fill="#0F172A" stroke="#10B981" strokeWidth="1" />
                     <circle cx="150" cy="210" r="8" fill="#10B981" />
                   </g>
 
-                  {/* Right Node 2 (Placements) */}
                   <g className="hover:scale-105 transition-transform">
                     <rect x="320" y="170" width="60" height="60" rx="14" fill="#111827" stroke="#1F2937" strokeWidth="2" />
                     <rect x="325" y="175" width="50" height="50" rx="10" fill="#0F172A" stroke="#10B981" strokeWidth="1" />
@@ -187,10 +209,60 @@ export default function LoginPage() {
               </div>
 
               {/* Error Banner */}
-              {(error || localError) && (
+              {(error || localError) && !unverifiedState && (
                 <div className="flex items-center space-x-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-2xl text-xs text-rose-700 dark:text-rose-300 animate-fade-in">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>Error: {error || localError}</span>
+                </div>
+              )}
+
+              {/* Unverified Email Warning & 1-Click Resend */}
+              {unverifiedState && (
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs space-y-2.5 animate-fade-in">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block">Email Verification Required</span>
+                      <span className="text-[11px] text-amber-700 dark:text-amber-400">
+                        {unverifiedState.msg || 'Please verify your email before logging in.'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleResendFromLogin}
+                      disabled={isResending}
+                      className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] transition shadow-xs disabled:opacity-50"
+                    >
+                      {isResending ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-3 h-3" />
+                      )}
+                      <span>Resend Link</span>
+                    </button>
+
+                    <Link
+                      href="/verify-email"
+                      className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:underline"
+                    >
+                      Go to Verification Page
+                    </Link>
+                  </div>
+
+                  {unverifiedState.link && (
+                    <div className="pt-1">
+                      <a
+                        href={unverifiedState.link}
+                        className="inline-flex items-center text-[11px] font-bold text-[#059669] dark:text-[#10B981] hover:underline"
+                      >
+                        <span>Click to Verify Email Directly</span>
+                        <ExternalLink className="w-3 h-3 ml-1" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
 
