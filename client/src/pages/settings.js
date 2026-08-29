@@ -24,7 +24,8 @@ import {
   Building,
   Save,
   Loader2,
-  Lock
+  Lock,
+  ChevronDown
 } from 'lucide-react';
 
 const DEPARTMENTS = [
@@ -257,17 +258,20 @@ export default function SettingsPage() {
                   <label className="text-[11px] font-bold text-[#64748B] dark:text-[#9CA3AF] uppercase tracking-wider block">
                     Assigned Campus Department
                   </label>
-                  <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] dark:bg-[#090D16] border border-[#E2E8F0] dark:border-[#1F2937] text-xs font-semibold text-[#0F172A] dark:text-[#F9FAFB] focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981]/20 outline-hidden transition cursor-pointer"
-                  >
-                    {DEPARTMENTS.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#F8FAFC] dark:bg-[#090D16] border border-[#E2E8F0] dark:border-[#1F2937] text-xs font-semibold text-[#0F172A] dark:text-[#F9FAFB] focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981]/20 outline-hidden transition cursor-pointer appearance-none"
+                    >
+                      {DEPARTMENTS.map((dept) => (
+                        <option key={dept.id} value={dept.id}>
+                          {dept.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-[#64748B] dark:text-[#9CA3AF] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
 
               </div>
