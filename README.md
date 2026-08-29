@@ -44,7 +44,7 @@ A production-grade, full-stack AI platform providing students and faculty with *
 ### Backend
 - **Runtime:** Node.js 20 LTS / Node.js 22 LTS, Express 4.21+ / Express 5
 - **Database:** MongoDB Atlas / Mongoose 8 (with In-Memory Fallback)
-- **Vector Database:** `@pinecone-database/pinecone` ^4.0 (with In-Memory Cosine Similarity Store)
+- **Vector Database:** `@pinecone-database/pinecone` ^8.0+ (with In-Memory Cosine Similarity Store)
 - **AI Integration:** Google Generative AI SDK (`gemini-3.7-flash` [Stable], `gemini-2.5-flash` [Stable], `gemini-embedding-001` [Stable], `gemini-embedding-2-preview` [Multimodal]), OpenRouter API fallback, Grounded Local Synthesizer
 - **Document Processing:** LangChain (`@langchain/textsplitters`), `pdf-parse`, Multer
 - **Security:** JWT Authentication, bcryptjs (Cost 12), Helmet, Express Rate Limiter, CORS, express-validator

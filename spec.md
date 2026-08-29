@@ -12,8 +12,8 @@ Build a production-ready, full-stack AI platform called **CampusRAG: Multi-Depar
 
 * **Frontend:** Next.js (Pages Router), React 19, Tailwind CSS, Zustand, Axios, Lucide React, KaTeX (for mathematical/policy notation), and React Markdown.
 * **Backend:** Node.js, Express, MongoDB Atlas, Mongoose, JSON Web Tokens (JWT), `@pinecone-database/pinecone` (or Qdrant vector client), LangChain / LangGraph, Multer, `pdf-parse`, helmet, morgan, compression, express-validator, and bcryptjs.
-* **AI Integration:** Google Generative AI SDK (`gemini-2.5-flash`, `gemini-3.7-flash`, `gemini-embedding-001`, `text-embedding-004`) as primary, OpenRouter API as fallback.
-* **Document & Vector Pipeline:** LangChain text splitters (RecursiveCharacterTextSplitter), Pinecone Serverless vector database, and MongoDB collection storage for file metadata and conversation states.
+* **AI Integration:** Google Generative AI SDK (`gemini-3.7-flash`, `gemini-2.5-flash`, `gemini-embedding-001`, `gemini-embedding-2-preview`) as primary, OpenRouter API as fallback.
+* **Document & Vector Pipeline:** LangChain text splitters (RecursiveCharacterTextSplitter), Pinecone Serverless vector database (@pinecone-database/pinecone ^8.0+), and MongoDB collection storage for file metadata and conversation states.
 
 ---
 
