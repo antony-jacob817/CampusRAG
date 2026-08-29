@@ -184,18 +184,18 @@ const seedInitialData = async () => {
   }
 
   // 2. Seed Campus Policy Knowledge Base Documents
-  let shouldSeedDocs = false;
-  if (inMem) {
-    shouldSeedDocs = !global.__inMemoryDocs || global.__inMemoryDocs.size === 0;
-  } else {
-    const count = await Document.countDocuments();
-    shouldSeedDocs = count === 0;
-  }
+  for (const docData of DEFAULT_DOCUMENTS) {
+    let exists = false;
+    if (inMem) {
+      exists = global.__inMemoryDocs && Array.from(global.__inMemoryDocs.values()).some(d => d.title === docData.title);
+    } else {
+      const found = await Document.findOne({ title: docData.title });
+      exists = !!found;
+    }
 
-  if (shouldSeedDocs) {
-    console.log('[Seed] Ingesting and vectorizing default campus policy documents...');
-    for (const docData of DEFAULT_DOCUMENTS) {
+    if (!exists) {
       try {
+        console.log(`[Seed] Ingesting & vectorizing: "${docData.title}" (${docData.department})...`);
         await ingestRawTextDocument({
           title: docData.title,
           department: docData.department,
@@ -207,10 +207,8 @@ const seedInitialData = async () => {
         console.warn(`[Seed] Error ingesting "${docData.title}": ${err.message}`);
       }
     }
-    console.log('[Seed] Default Campus Knowledge Base initialized successfully!');
-  } else {
-    console.log('[Seed] Campus Knowledge Base documents already exist.');
   }
+  console.log('[Seed] Campus Knowledge Base documents verified and synchronized.');
 };
 
 if (require.main === module) {
