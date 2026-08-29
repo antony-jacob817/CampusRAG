@@ -133,11 +133,12 @@ Please provide a direct, verified answer backed strictly by the context above:`;
       if (!googleGenAI) googleGenAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
       
       const candidateModels = [
-        'gemini-2.0-flash',
-        'gemini-2.0-flash-lite',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-8b',
-        'gemini-1.5-pro',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-2.5-flash',
+        'gemini-3.7-flash',
+        'gemini-2.5-pro',
+        'gemini-pro',
       ];
 
       for (const modelName of candidateModels) {
@@ -198,7 +199,7 @@ Please provide a direct, verified answer backed strictly by the context above:`;
             'X-Title': 'CampusRAG',
           },
           body: JSON.stringify({
-            model: 'google/gemini-flash-1.5',
+            model: 'google/gemini-2.0-flash-001',
             messages: [
               { role: 'system', content: SYSTEM_INSTRUCTION },
               { role: 'user', content: `CONTEXT:\n${contextText}\n\nQUERY:\n${userQuery}` },

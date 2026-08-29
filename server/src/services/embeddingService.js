@@ -60,7 +60,7 @@ const generateEmbedding = async (text) => {
       googleGenAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
     }
 
-    const embeddingModels = ['gemini-embedding-001', 'gemini-embedding-2-preview'];
+    const embeddingModels = ['gemini-embedding-001', 'text-embedding-004', 'gemini-embedding-2-preview'];
     for (const modelName of embeddingModels) {
       try {
         const model = googleGenAI.getGenerativeModel({ model: modelName });
