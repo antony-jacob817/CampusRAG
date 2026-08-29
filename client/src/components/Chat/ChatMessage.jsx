@@ -22,7 +22,7 @@ import CitationBadge from './CitationBadge';
 import { useChatStore } from '../../store/chatStore';
 
 export default function ChatMessage({ message, isStreaming = false }) {
-  const { submitFeedback, sendMessageStream, isStreaming: globalStreaming } = useChatStore();
+  const { submitFeedback, editMessageStream, isStreaming: globalStreaming } = useChatStore();
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState(message.feedback || null);
   
@@ -71,7 +71,7 @@ export default function ChatMessage({ message, isStreaming = false }) {
   const handleSaveAndSubmit = async () => {
     if (!editText.trim() || globalStreaming) return;
     setIsEditing(false);
-    await sendMessageStream(editText.trim(), message.attachment || null);
+    await editMessageStream(message._id || message.id, editText.trim(), message.attachment || null);
   };
 
   const handleKeyDown = (e) => {

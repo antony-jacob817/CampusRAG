@@ -206,6 +206,97 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
+  // Edit existing user message, remove subsequent responses, and regenerate answer
+  editMessageStream: async (messageId, newQueryText, attachment = null) => {
+    let thread = get().activeThread;
+    const department = get().selectedDepartment;
+    if (!thread) return;
+
+    const threadId = thread._id || thread.id;
+    const currentMessages = get().messages;
+    const msgIndex = currentMessages.findIndex((m) => (m._id === messageId || m.id === messageId));
+
+    if (msgIndex === -1) {
+      return get().sendMessageStream(newQueryText, attachment);
+    }
+
+    const updatedUserMsg = {
+      ...currentMessages[msgIndex],
+      text: newQueryText,
+      attachment: attachment || currentMessages[msgIndex].attachment || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Keep messages up to the edited prompt, removing the previous answer and later turns
+    const truncatedMessages = [...currentMessages.slice(0, msgIndex), updatedUserMsg];
+
+    // If first message in thread was edited, update title
+    const displayQuery = newQueryText.trim();
+    const newTitle = displayQuery.length > 38 ? displayQuery.substring(0, 35) + '...' : displayQuery;
+    if (msgIndex === 0 && newTitle) {
+      thread = { ...thread, title: newTitle };
+    }
+
+    set((state) => ({
+      threads: state.threads.map((t) =>
+        (t._id || t.id) === threadId ? { ...t, title: thread.title } : t
+      ),
+      activeThread: thread,
+      messages: truncatedMessages,
+      isStreaming: true,
+      streamingText: '',
+      streamingCitations: [],
+      streamingConfidence: null,
+      error: null,
+    }));
+
+    const queryPayload = attachment 
+      ? `[Attached Document: ${attachment.name} (${Math.round(attachment.size / 1024)} KB)]\n\n${newQueryText || 'Please analyze this attached document and verify its campus regulations.'}`
+      : newQueryText;
+
+    await streamChatMessage({
+      threadId,
+      text: queryPayload,
+      department,
+      onStart: () => {},
+      onToken: (token) => {
+        set((state) => ({
+          streamingText: state.streamingText + token,
+        }));
+      },
+      onComplete: (completeData) => {
+        const finalAiMsg = completeData.message || {
+          _id: `ai-${Date.now()}`,
+          id: `ai-${Date.now()}`,
+          threadId,
+          sender: 'ai',
+          text: get().streamingText,
+          confidenceScore: completeData.confidenceScore || 0.9,
+          wasGrounded: completeData.wasGrounded !== false,
+          citations: completeData.citations || [],
+          department: completeData.department || department,
+          createdAt: new Date().toISOString(),
+        };
+
+        set((state) => ({
+          messages: [...state.messages, finalAiMsg],
+          isStreaming: false,
+          streamingText: '',
+          streamingCitations: [],
+          streamingConfidence: null,
+        }));
+
+        get().fetchThreads();
+      },
+      onError: (err) => {
+        set({
+          isStreaming: false,
+          error: `Error generating answer: ${err.message}`,
+        });
+      },
+    });
+  },
+
   // Submit feedback
   submitFeedback: async (messageId, feedback, comment = null) => {
     try {
