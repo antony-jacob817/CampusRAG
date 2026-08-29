@@ -142,8 +142,8 @@ export const useChatStore = create((set, get) => ({
   },
 
   // Send message with real-time SSE streaming and optional file attachment
-  sendMessageStream: async (queryText, attachment = null) => {
-    let thread = get().activeThread;
+  sendMessageStream: async (queryText, attachment = null, explicitThread = null) => {
+    let thread = explicitThread || get().activeThread;
     const department = get().selectedDepartment;
 
     if (!thread) {
@@ -187,7 +187,7 @@ export const useChatStore = create((set, get) => ({
         (t._id || t.id) === threadId ? { ...t, title: thread.title } : t
       ),
       activeThread: thread,
-      messages: [...state.messages, tempUserMsg],
+      messages: explicitThread ? [tempUserMsg] : [...state.messages, tempUserMsg],
       isStreaming: true,
       streamingText: '',
       streamingCitations: [],

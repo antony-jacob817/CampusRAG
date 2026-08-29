@@ -98,11 +98,9 @@ export default function ChatIndexPage() {
     try {
       const newThread = await createThread(promptTitle, activeDomain);
       const threadId = newThread._id || newThread.id;
+      // Start streaming immediately on the new thread
+      sendMessageStream(promptTitle, null, newThread);
       router.push(`/chat/${threadId}`);
-      // Stream question in background
-      setTimeout(() => {
-        sendMessageStream(promptTitle);
-      }, 100);
     } catch (e) {
       console.error('Failed to trigger card query:', e);
     }

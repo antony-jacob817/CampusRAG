@@ -96,17 +96,20 @@ export default function ChatInput({ placeholder = 'Ask any campus regulation or 
       const cleanTitle = displayTitle.length > 38 ? displayTitle.substring(0, 35) + '...' : displayTitle;
       try {
         const newThread = await useChatStore.getState().createThread(cleanTitle, selectedDepartment || 'all');
-        await router.push(`/chat/${newThread._id || newThread.id}`);
-        setTimeout(() => {
-          sendMessageStream(query, attachmentPayload);
-        }, 60);
+        const threadId = newThread._id || newThread.id;
+        
+        // Start streaming immediately on the new thread with live userMsg & animated loader state
+        sendMessageStream(query, attachmentPayload, newThread);
+        
+        // Transition to thread route
+        router.push(`/chat/${threadId}`);
         return;
       } catch (createErr) {
         console.error('Failed to auto-create thread on query submission:', createErr);
       }
+    } else {
+      sendMessageStream(query, attachmentPayload);
     }
-
-    sendMessageStream(query, attachmentPayload);
   };
 
   const handleKeyDown = (e) => {

@@ -13,6 +13,7 @@ export default function ThreadChatPage() {
   const router = useRouter();
   const { threadId } = router.query;
   const { 
+    activeThread,
     messages, 
     isStreaming, 
     streamingText, 
@@ -24,9 +25,14 @@ export default function ThreadChatPage() {
 
   useEffect(() => {
     if (threadId) {
+      const currentActiveId = activeThread?._id || activeThread?.id;
+      // If we are ALREADY on this thread and have active messages or stream, DO NOT re-fetch and wipe it!
+      if (currentActiveId === threadId && (messages.length > 0 || isStreaming)) {
+        return;
+      }
       selectThread(threadId);
     }
-  }, [threadId, selectThread]);
+  }, [threadId, activeThread, messages.length, isStreaming, selectThread]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
