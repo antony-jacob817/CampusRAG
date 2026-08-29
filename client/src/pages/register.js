@@ -23,15 +23,8 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import AppShell from '../components/AppShell/AppShell';
-
-const DEPARTMENTS = [
-  { id: 'academics', label: 'Computer Science & Engineering' },
-  { id: 'admissions', label: 'First Year Admissions' },
-  { id: 'examinations', label: 'Examinations Branch' },
-  { id: 'hostel', label: 'Residential Hostel Board' },
-  { id: 'placements', label: 'Career & Placement Cell' },
-  { id: 'general', label: 'General Sciences & Humanities' },
-];
+import CustomDropdown from '../components/Common/CustomDropdown';
+import { DEPARTMENTS } from '../constants/departments';
 
 const KNOWN_TEMP_DOMAINS = [
   'mailinator.com', 'tempmail.com', '10minutemail.com', 'guerrillamail.com',
@@ -302,20 +295,11 @@ export default function RegisterPage() {
                       <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
                         Department / Academic Program
                       </label>
-                      <div className="relative">
-                        <select
-                          value={department}
-                          onChange={(e) => setDepartment(e.target.value)}
-                          className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition appearance-none cursor-pointer"
-                        >
-                          {DEPARTMENTS.map((d) => (
-                            <option key={d.id} value={d.id}>
-                              {d.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-4 h-4 text-[#64748B] dark:text-[#9CA3AF] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
+                      <CustomDropdown
+                        options={DEPARTMENTS}
+                        value={department}
+                        onChange={setDepartment}
+                      />
                     </div>
 
                     <div>

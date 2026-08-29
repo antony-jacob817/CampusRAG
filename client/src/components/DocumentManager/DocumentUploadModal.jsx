@@ -12,15 +12,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import api from '../../services/api';
-
-const DEPARTMENTS = [
-  { id: 'academics', label: 'Academics & Regulations' },
-  { id: 'admissions', label: 'Admissions & Fees' },
-  { id: 'examinations', label: 'Examinations & Grading' },
-  { id: 'hostel', label: 'Hostel & Residential' },
-  { id: 'placements', label: 'Placements & Careers' },
-  { id: 'general', label: 'General Student Affairs' },
-];
+import CustomDropdown from '../Common/CustomDropdown';
+import { DEPARTMENTS } from '../../constants/departments';
 
 export default function DocumentUploadModal({ isOpen, onClose, onUploadSuccess }) {
   const [file, setFile] = useState(null);
@@ -244,20 +237,11 @@ export default function DocumentUploadModal({ isOpen, onClose, onUploadSuccess }
             <label className="block text-xs font-bold text-[#0F172A] dark:text-[#F9FAFB] mb-1">
               Target Department (metadata)
             </label>
-            <div className="relative">
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full pl-3.5 pr-10 py-2.5 text-xs rounded-xl bg-[#F1F5F9] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#1F2937] text-[#0F172A] dark:text-[#F9FAFB] outline-hidden focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] appearance-none cursor-pointer"
-              >
-                {DEPARTMENTS.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-[#64748B] dark:text-[#9CA3AF] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            <CustomDropdown
+              options={DEPARTMENTS}
+              value={department}
+              onChange={setDepartment}
+            />
           </div>
 
           {/* 4-Stage Progress Stepper (Matching Reference Image) */}
