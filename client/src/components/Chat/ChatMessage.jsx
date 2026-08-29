@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -14,22 +14,37 @@ import {
   AlertTriangle,
   Sparkles,
   FileText,
-  Image as ImageIcon
+  Pencil,
+  X,
+  Send
 } from 'lucide-react';
 import CitationBadge from './CitationBadge';
 import { useChatStore } from '../../store/chatStore';
 
 export default function ChatMessage({ message, isStreaming = false }) {
-  const { submitFeedback } = useChatStore();
+  const { submitFeedback, sendMessageStream, isStreaming: globalStreaming } = useChatStore();
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState(message.feedback || null);
+  
+  // Edit mode state for user messages
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.text || '');
+  const editTextareaRef = useRef(null);
 
   const isAi = message.sender === 'ai';
   const confidencePct = message.confidenceScore ? Math.round(message.confidenceScore * 100) : 92;
   const isGrounded = message.wasGrounded !== false;
 
+  useEffect(() => {
+    if (isEditing && editTextareaRef.current) {
+      editTextareaRef.current.focus();
+      editTextareaRef.current.style.height = 'auto';
+      editTextareaRef.current.style.height = `${editTextareaRef.current.scrollHeight}px`;
+    }
+  }, [isEditing]);
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(message.text);
+    navigator.clipboard.writeText(message.text || '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -43,8 +58,33 @@ export default function ChatMessage({ message, isStreaming = false }) {
     }
   };
 
+  const handleStartEdit = () => {
+    setEditText(message.text || '');
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditText(message.text || '');
+    setIsEditing(false);
+  };
+
+  const handleSaveAndSubmit = async () => {
+    if (!editText.trim() || globalStreaming) return;
+    setIsEditing(false);
+    await sendMessageStream(editText.trim(), message.attachment || null);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveAndSubmit();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
   return (
-    <div className={`py-4 px-4 sm:px-6 rounded-2xl transition border ${
+    <div className={`py-4 px-4 sm:px-6 rounded-2xl transition border group ${
       isAi 
         ? 'bg-white dark:bg-[#111827] border-[#E2E8F0] dark:border-[#1F2937] shadow-xs' 
         : 'bg-[#F1F5F9] dark:bg-[#0F172A] border-[#E2E8F0] dark:border-[#1F2937]'
@@ -79,22 +119,47 @@ export default function ChatMessage({ message, isStreaming = false }) {
               )}
             </div>
 
+            {/* Actions for User Messages */}
+            {!isAi && !isEditing && (
+              <div className="flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition">
+                <button
+                  onClick={handleStartEdit}
+                  className="p-1.5 text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] hover:bg-white dark:hover:bg-[#1F2937] rounded-lg transition"
+                  title="Edit message"
+                  aria-label="Edit message"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={handleCopy}
+                  className="p-1.5 text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] hover:bg-white dark:hover:bg-[#1F2937] rounded-lg transition"
+                  title="Copy message"
+                  aria-label="Copy message"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-[#10B981]" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            )}
+
+            {/* Actions for AI Assistant Messages */}
             {isAi && !isStreaming && (
               <div className="flex items-center space-x-1">
                 <button
                   onClick={handleCopy}
-                  className="p-1 text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] rounded-md transition"
+                  className="p-1.5 text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] hover:bg-[#F1F5F9] dark:hover:bg-[#1F2937] rounded-lg transition"
                   title="Copy response"
+                  aria-label="Copy response"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-[#10B981]" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
 
                 <button
                   onClick={() => handleFeedback('like')}
-                  className={`p-1 rounded-md transition ${
+                  className={`p-1.5 rounded-lg transition ${
                     feedback === 'like' 
                       ? 'text-[#059669] dark:text-[#10B981] bg-[#ECFDF5] dark:bg-[#064E3B]/50' 
-                      : 'text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB]'
+                      : 'text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] hover:bg-[#F1F5F9] dark:hover:bg-[#1F2937]'
                   }`}
                   title="Helpful"
                 >
@@ -103,10 +168,10 @@ export default function ChatMessage({ message, isStreaming = false }) {
 
                 <button
                   onClick={() => handleFeedback('dislike')}
-                  className={`p-1 rounded-md transition ${
+                  className={`p-1.5 rounded-lg transition ${
                     feedback === 'dislike' 
                       ? 'text-rose-500 bg-rose-50 dark:bg-rose-950/60' 
-                      : 'text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB]'
+                      : 'text-[#64748B] dark:text-[#9CA3AF] hover:text-[#0F172A] dark:hover:text-[#F9FAFB] hover:bg-[#F1F5F9] dark:hover:bg-[#1F2937]'
                   }`}
                   title="Not helpful"
                 >
@@ -139,16 +204,52 @@ export default function ChatMessage({ message, isStreaming = false }) {
             </div>
           )}
 
-          {/* Rendered Text with Markdown & KaTeX */}
-          <div className="prose-chat text-xs sm:text-sm text-[#0F172A] dark:text-[#F9FAFB] leading-relaxed break-words">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeKatex]}
-            >
-              {message.text || ''}
-            </ReactMarkdown>
-            {isStreaming && <span className="streaming-cursor" />}
-          </div>
+          {/* Inline Edit Mode vs Markdown Render */}
+          {isEditing ? (
+            <div className="space-y-2 mt-1">
+              <textarea
+                ref={editTextareaRef}
+                value={editText}
+                onChange={(e) => {
+                  setEditText(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                onKeyDown={handleKeyDown}
+                rows={2}
+                className="w-full p-3 rounded-xl bg-white dark:bg-[#111827] border border-[#10B981]/50 focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981]/20 outline-hidden text-xs sm:text-sm text-[#0F172A] dark:text-[#F9FAFB] resize-none transition leading-relaxed shadow-xs"
+                placeholder="Edit your question..."
+              />
+              <div className="flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#64748B] dark:text-[#9CA3AF] hover:bg-[#E2E8F0] dark:hover:bg-[#1F2937] transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAndSubmit}
+                  disabled={!editText.trim() || globalStreaming}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-[#059669] dark:bg-[#10B981] hover:bg-[#047857] dark:hover:bg-[#059669] text-white text-xs font-bold shadow-xs transition disabled:opacity-50"
+                >
+                  <span>Send</span>
+                  <Send className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="prose-chat text-xs sm:text-sm text-[#0F172A] dark:text-[#F9FAFB] leading-relaxed break-words">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+              >
+                {message.text || ''}
+              </ReactMarkdown>
+              {isStreaming && <span className="streaming-cursor" />}
+            </div>
+          )}
 
           {/* Citation Badges */}
           {isAi && message.citations && message.citations.length > 0 && !isStreaming && (
@@ -171,3 +272,4 @@ export default function ChatMessage({ message, isStreaming = false }) {
     </div>
   );
 }
+
