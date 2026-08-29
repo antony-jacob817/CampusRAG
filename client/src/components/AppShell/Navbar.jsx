@@ -61,7 +61,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }) {
       <div className="relative w-full h-full px-4 sm:px-6 flex items-center justify-between">
         
         {/* Left: Geometric Vector Logo + CampusRAG Brand -> ALWAYS links to landing page '/' */}
-        <div className="flex items-center space-x-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           {!isLandingPage && (
             <button
               onClick={onToggleSidebar}
@@ -72,13 +72,13 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }) {
             </button>
           )}
 
-          <Link href="/" className="flex items-center space-x-2.5 group">
+          <Link href="/" className="flex items-center gap-2.5 group">
             {/* CampusRAG Logo Image */}
             <div className="w-8 h-8 rounded-xl overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.35)] flex items-center justify-center shrink-0 border border-[#10B981]/30">
               <img src="/logo.png" alt="CampusRAG Logo" className="w-full h-full object-contain" />
             </div>
 
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-base leading-tight bg-gradient-to-r from-[#0F172A] dark:from-[#F9FAFB] to-[#059669] dark:to-[#10B981] bg-clip-text text-transparent">
                 CampusRAG
               </span>
@@ -89,7 +89,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }) {
         {/* Center: Absolute Viewport Centered Navigation / Knowledge Base Status */}
         <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center justify-center pointer-events-auto">
           {isLandingPage ? (
-            <nav className="flex items-center space-x-8 font-semibold text-xs text-[#64748B] dark:text-[#9CA3AF]">
+            <nav className="flex items-center gap-8 font-semibold text-xs text-[#64748B] dark:text-[#9CA3AF]">
               <a 
                 href="#engine" 
                 onClick={(e) => handleSmoothScroll(e, 'engine')}
@@ -113,7 +113,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }) {
               </a>
             </nav>
           ) : (
-            <div className="inline-flex items-center space-x-2 bg-[#ECFDF5] dark:bg-[#064E3B]/25 px-3.5 py-1 rounded-full text-xs font-semibold text-[#059669] dark:text-[#10B981] border border-[#A7F3D0] dark:border-[#10B981]/40 shadow-xs">
+            <div className="inline-flex items-center gap-2 bg-[#ECFDF5] dark:bg-[#064E3B]/25 px-3.5 py-1 rounded-full text-xs font-semibold text-[#059669] dark:text-[#10B981] border border-[#A7F3D0] dark:border-[#10B981]/40 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
               <span>Active Knowledge Base: Connected</span>
             </div>
@@ -121,7 +121,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }) {
         </div>
 
         {/* Right Section: Shortcut Pill + 60fps Theme Toggle + User Profile */}
-        <div className="flex items-center space-x-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           
           {/* Global Academic Query Shortcut Badge */}
           <div className="hidden md:inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-[#F1F5F9] dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#1F2937] text-[11px] font-mono text-[#64748B] dark:text-[#9CA3AF] select-none">
