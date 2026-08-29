@@ -30,9 +30,14 @@ export default function ThreadChatPage() {
       if (currentActiveId === threadId && (messages.length > 0 || isStreaming)) {
         return;
       }
-      selectThread(threadId);
+      selectThread(threadId).then((res) => {
+        if (res && res.success === false) {
+          // If thread does not exist or belongs to another user, redirect cleanly to new chat
+          router.replace('/chat');
+        }
+      });
     }
-  }, [threadId, activeThread, messages.length, isStreaming, selectThread]);
+  }, [threadId, activeThread, messages.length, isStreaming, selectThread, router]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

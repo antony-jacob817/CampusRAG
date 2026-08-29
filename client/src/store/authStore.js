@@ -56,6 +56,13 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem('campusrag_token', token);
       localStorage.setItem('campusrag_user', JSON.stringify(user));
 
+      // Reset chat state to prevent cross-account contamination
+      try {
+        const { useChatStore } = require('./chatStore');
+        useChatStore.getState().resetChatState();
+        useChatStore.getState().fetchThreads();
+      } catch (e) {}
+
       set({
         user,
         token,
@@ -184,6 +191,12 @@ export const useAuthStore = create((set, get) => ({
       localStorage.removeItem('campusrag_token');
       localStorage.removeItem('campusrag_user');
     }
+
+    try {
+      const { useChatStore } = require('./chatStore');
+      useChatStore.getState().resetChatState();
+    } catch (e) {}
+
     set({
       user: null,
       token: null,

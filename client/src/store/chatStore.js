@@ -75,16 +75,41 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
+  // Reset all conversation and thread state (used on logout and user switch)
+  resetChatState: () => {
+    const ac = get().abortController;
+    if (ac) {
+      try { ac.abort(); } catch (e) {}
+    }
+    set({
+      threads: [],
+      activeThread: null,
+      messages: [],
+      selectedDepartment: 'all',
+      isStreaming: false,
+      streamingText: '',
+      streamingCitations: [],
+      streamingConfidence: null,
+      abortController: null,
+      selectedCitation: null,
+      isCitationDrawerOpen: false,
+      isLoadingThreads: false,
+      isLoadingMessages: false,
+      error: null,
+    });
+  },
+
   // Fetch all chat threads
   fetchThreads: async () => {
     set({ isLoadingThreads: true, error: null });
     try {
       const res = await api.get('/chat/threads');
       if (res.data.success) {
-        set({ threads: res.data.threads, isLoadingThreads: false });
+        set({ threads: res.data.threads || [], isLoadingThreads: false });
       }
     } catch (err) {
       set({
+        threads: [],
         error: err.response?.data?.error || err.message,
         isLoadingThreads: false,
       });
@@ -117,7 +142,7 @@ export const useChatStore = create((set, get) => ({
     const currentThread = get().activeThread;
     const currentId = currentThread?._id || currentThread?.id;
     if (currentId === threadId && get().isStreaming) {
-      return;
+      return { success: true };
     }
 
     set({ isLoadingMessages: true, error: null });
@@ -132,12 +157,16 @@ export const useChatStore = create((set, get) => ({
           streamingText: '',
           isStreaming: false,
         });
+        return { success: true, thread: res.data.thread };
       }
     } catch (err) {
       set({
+        activeThread: null,
+        messages: [],
         error: err.response?.data?.error || err.message,
         isLoadingMessages: false,
       });
+      return { success: false, error: err.response?.data?.error || err.message };
     }
   },
 
