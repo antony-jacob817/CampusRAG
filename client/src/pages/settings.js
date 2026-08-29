@@ -155,7 +155,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Interactive Profile Information & Edit Form */}
-          <div className="bg-white/90 dark:bg-[#111827]/90 backdrop-blur-xl rounded-3xl p-6 border border-[#E2E8F0] dark:border-[#1F2937] shadow-xl space-y-6">
+          <div className="relative z-20 bg-white/90 dark:bg-[#111827]/90 backdrop-blur-xl rounded-3xl p-6 border border-[#E2E8F0] dark:border-[#1F2937] shadow-xl space-y-6">
             <div className="flex items-center justify-between pb-3.5 border-b border-[#E2E8F0] dark:border-[#1F2937]">
               <div className="flex items-center space-x-3">
                 <div className="p-2.5 rounded-2xl bg-[#ECFDF5] dark:bg-[#0F172A] text-[#059669] dark:text-[#10B981] border border-[#A7F3D0] dark:border-[#10B981]/30">
@@ -293,7 +293,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Theme Settings & Keyboard Shortcuts in 2-Column Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Theme Settings Card */}
             <div className="bg-white/90 dark:bg-[#111827]/90 backdrop-blur-xl rounded-3xl p-6 border border-[#E2E8F0] dark:border-[#1F2937] shadow-xl space-y-4">

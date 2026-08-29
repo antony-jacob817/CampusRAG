@@ -45,7 +45,7 @@ export default function CustomDropdown({
   };
 
   return (
-    <div ref={dropdownRef} className={`relative w-full ${className}`}>
+    <div ref={dropdownRef} className={`relative w-full ${isOpen ? 'z-50' : 'z-10'} ${className}`}>
       {/* Trigger Button */}
       <button
         type="button"
@@ -69,7 +69,7 @@ export default function CustomDropdown({
 
       {/* Floating Menu Popover (Rounded-2xl, Non-Pointy, Glassmorphic) */}
       {isOpen && (
-        <div className="absolute left-0 right-0 z-50 mt-1.5 p-1.5 rounded-2xl bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl border border-[#E2E8F0] dark:border-[#1F2937] shadow-2xl space-y-1 animate-fade-in max-h-60 overflow-y-auto scrollbar-thin">
+        <div className="absolute left-0 right-0 z-50 mt-1.5 p-1.5 rounded-2xl bg-white dark:bg-[#111827] backdrop-blur-2xl border border-[#E2E8F0] dark:border-[#1F2937] shadow-2xl space-y-1 animate-fade-in max-h-60 overflow-y-auto scrollbar-thin">
           {options.map((opt) => {
             const isSelected = opt.id === value;
 
