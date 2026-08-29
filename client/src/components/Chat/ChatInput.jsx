@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { Send, Paperclip, Loader2, FileText, Image as ImageIcon, X } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore';
 
@@ -12,6 +13,7 @@ const DEPARTMENT_LABELS = {
 };
 
 export default function ChatInput({ placeholder = 'Ask any campus regulation or policy...' }) {
+  const router = useRouter();
   const [input, setInput] = useState('');
   const [attachedFile, setAttachedFile] = useState(null);
   const textareaRef = useRef(null);
@@ -73,7 +75,7 @@ export default function ChatInput({ placeholder = 'Ask any campus regulation or 
     setAttachedFile(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e?.preventDefault();
     const query = input.trim();
     if ((!query && !attachedFile) || isStreaming) return;
@@ -85,6 +87,25 @@ export default function ChatInput({ placeholder = 'Ask any campus regulation or 
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+
+    const isIndexRoute = router.pathname === '/chat';
+    const activeThread = useChatStore.getState().activeThread;
+
+    if (!activeThread || isIndexRoute) {
+      const displayTitle = query || (attachmentPayload ? `Analysis: ${attachmentPayload.name}` : 'Academic Query');
+      const cleanTitle = displayTitle.length > 38 ? displayTitle.substring(0, 35) + '...' : displayTitle;
+      try {
+        const newThread = await useChatStore.getState().createThread(cleanTitle, selectedDepartment || 'all');
+        await router.push(`/chat/${newThread._id || newThread.id}`);
+        setTimeout(() => {
+          sendMessageStream(query, attachmentPayload);
+        }, 60);
+        return;
+      } catch (createErr) {
+        console.error('Failed to auto-create thread on query submission:', createErr);
+      }
+    }
+
     sendMessageStream(query, attachmentPayload);
   };
 

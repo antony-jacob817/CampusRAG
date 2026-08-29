@@ -36,6 +36,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
 
   const handleNewChat = () => {
+    useChatStore.setState({ activeThread: null, messages: [], isStreaming: false, streamingText: '' });
     router.push('/chat?new=true');
     if (onClose) onClose();
   };
@@ -45,13 +46,15 @@ export default function Sidebar({ isOpen, onClose }) {
     if (onClose) onClose();
   };
 
-  const handleDeleteThread = (e, threadId) => {
+  const handleDeleteThread = async (e, threadId) => {
     e.stopPropagation();
-    deleteThread(threadId);
-    if (activeThread && (activeThread._id === threadId || activeThread.id === threadId)) {
-      router.push('/chat');
-    }
+    await deleteThread(threadId);
+    useChatStore.setState({ activeThread: null, messages: [], isStreaming: false, streamingText: '' });
+    router.push('/chat?new=true');
   };
+
+  const isNewChatRoute = router.pathname === '/chat' || router.query.new === 'true';
+  const isThreadActive = (threadId) => !isNewChatRoute && (router.query.threadId === threadId || (activeThread && (activeThread._id === threadId || activeThread.id === threadId)));
 
   // Filter threads by search query
   const filteredThreads = useMemo(() => {
@@ -165,14 +168,14 @@ export default function Sidebar({ isOpen, onClose }) {
             ) : (
               todayList.map((t) => {
                 const threadId = t._id || t.id;
-                const isActive = activeThread && (activeThread._id === threadId || activeThread.id === threadId);
+                const active = isThreadActive(threadId);
 
                 return (
                   <div
                     key={threadId}
                     onClick={() => handleSelectThread(threadId)}
                     className={`group relative flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs cursor-pointer transition ${
-                      isActive
+                      active
                         ? 'bg-[#ECFDF5] dark:bg-[#111827] text-[#059669] dark:text-[#10B981] font-bold border border-[#A7F3D0] dark:border-[#10B981]/40 shadow-xs'
                         : 'text-[#64748B] dark:text-[#9CA3AF] hover:bg-[#F8FAFC] dark:hover:bg-[#111827] hover:text-[#0F172A] dark:hover:text-[#F9FAFB]'
                     }`}
@@ -201,14 +204,14 @@ export default function Sidebar({ isOpen, onClose }) {
               </p>
               {weekList.map((t) => {
                 const threadId = t._id || t.id;
-                const isActive = activeThread && (activeThread._id === threadId || activeThread.id === threadId);
+                const active = isThreadActive(threadId);
 
                 return (
                   <div
                     key={threadId}
                     onClick={() => handleSelectThread(threadId)}
                     className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs cursor-pointer transition ${
-                      isActive
+                      active
                         ? 'bg-[#ECFDF5] dark:bg-[#111827] text-[#059669] dark:text-[#10B981] font-bold border border-[#A7F3D0] dark:border-[#10B981]/40'
                         : 'text-[#64748B] dark:text-[#9CA3AF] hover:bg-[#F8FAFC] dark:hover:bg-[#111827] hover:text-[#0F172A] dark:hover:text-[#F9FAFB]'
                     }`}
@@ -237,14 +240,14 @@ export default function Sidebar({ isOpen, onClose }) {
               </p>
               {monthList.map((t) => {
                 const threadId = t._id || t.id;
-                const isActive = activeThread && (activeThread._id === threadId || activeThread.id === threadId);
+                const active = isThreadActive(threadId);
 
                 return (
                   <div
                     key={threadId}
                     onClick={() => handleSelectThread(threadId)}
                     className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs cursor-pointer transition ${
-                      isActive
+                      active
                         ? 'bg-[#ECFDF5] dark:bg-[#111827] text-[#059669] dark:text-[#10B981] font-bold border border-[#A7F3D0] dark:border-[#10B981]/40'
                         : 'text-[#64748B] dark:text-[#9CA3AF] hover:bg-[#F8FAFC] dark:hover:bg-[#111827] hover:text-[#0F172A] dark:hover:text-[#F9FAFB]'
                     }`}
