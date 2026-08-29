@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
+import api from '../../services/api';
 import {
   Plus,
   MessageSquare,
@@ -25,6 +26,7 @@ export default function Sidebar({ isOpen, onClose }) {
   } = useChatStore();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [adminCounts, setAdminCounts] = useState({ totalQueries: 0, totalDocuments: 0 });
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
@@ -32,6 +34,28 @@ export default function Sidebar({ isOpen, onClose }) {
       fetchThreads();
     }
   }, [user, fetchThreads]);
+
+  // Fetch real analytics telemetry & document counts for admin
+  useEffect(() => {
+    if (isAdmin) {
+      let isMounted = true;
+      const fetchAdminCounts = async () => {
+        try {
+          const res = await api.get('/admin/analytics');
+          if (isMounted && res.data?.success && res.data?.metrics) {
+            setAdminCounts({
+              totalQueries: res.data.metrics.totalQueries || 0,
+              totalDocuments: res.data.metrics.totalDocuments || 0,
+            });
+          }
+        } catch (e) {}
+      };
+      fetchAdminCounts();
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [isAdmin, router.pathname]);
 
 
 
@@ -290,8 +314,8 @@ export default function Sidebar({ isOpen, onClose }) {
                 <BarChart2 className="w-3.5 h-3.5 text-amber-500" />
                 <span>Analytics Telemetry</span>
               </div>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 font-bold">
-                0
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 font-bold border border-amber-500/20">
+                {adminCounts.totalQueries}
               </span>
             </Link>
 
@@ -308,8 +332,8 @@ export default function Sidebar({ isOpen, onClose }) {
                 <FileText className="w-3.5 h-3.5 text-[#059669] dark:text-[#10B981]" />
                 <span>Document Knowledge Base</span>
               </div>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#10B981]/10 text-[#059669] dark:text-[#10B981] font-bold">
-                12
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#10B981]/10 text-[#059669] dark:text-[#10B981] font-bold border border-[#10B981]/20">
+                {adminCounts.totalDocuments}
               </span>
             </Link>
           </div>
