@@ -53,7 +53,7 @@ export default function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>CampusRAG - Multi-Department Academic Assistant & Knowledge Engine</title>
+        <title>CampusRAG: Multi-Department Academic Assistant & Knowledge Engine</title>
         <meta name="description" content="Verifiable, hallucination-resistant answers to campus queries backed by official college documentation and vector memory." />
         <link rel="icon" type="image/png" href="/logo.png" />
         <link rel="shortcut icon" href="/logo.png" />
