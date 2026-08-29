@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
-import { streamChatMessage } from '../services/sse';
+import { streamChatMessage, streamEditChatMessage } from '../services/sse';
 
 export const useChatStore = create((set, get) => ({
   threads: [],
@@ -334,12 +334,69 @@ export const useChatStore = create((set, get) => ({
       ? `[Attached Document: ${attachment.name} (${Math.round(attachment.size / 1024)} KB)]\n\n${newQueryText || 'Please analyze this attached document and verify its campus regulations.'}`
       : newQueryText;
 
-    await streamChatMessage({
-      threadId,
+    const actualMsgId = messageId.startsWith('temp-') ? null : messageId;
+
+    if (!actualMsgId) {
+      // If was temporary, fallback to standard stream
+      await streamChatMessage({
+        threadId,
+        text: queryPayload,
+        department,
+        signal: ac.signal,
+        onStart: () => {},
+        onToken: (token) => {
+          set((state) => ({
+            streamingText: state.streamingText + token,
+          }));
+        },
+        onComplete: (completeData) => {
+          const finalAiMsg = completeData.message || {
+            _id: `ai-${Date.now()}`,
+            id: `ai-${Date.now()}`,
+            threadId,
+            sender: 'ai',
+            text: get().streamingText,
+            confidenceScore: completeData.confidenceScore || 0.9,
+            wasGrounded: completeData.wasGrounded !== false,
+            citations: completeData.citations || [],
+            department: completeData.department || department,
+            createdAt: new Date().toISOString(),
+          };
+
+          set((state) => ({
+            messages: [...truncatedMessages, finalAiMsg],
+            isStreaming: false,
+            streamingText: '',
+            streamingCitations: [],
+            streamingConfidence: null,
+          }));
+
+          get().fetchThreads();
+        },
+        onError: (err) => {
+          set({
+            isStreaming: false,
+            error: `Error generating answer: ${err.message}`,
+          });
+        },
+      });
+      return;
+    }
+
+    await streamEditChatMessage({
+      messageId: actualMsgId,
       text: queryPayload,
       department,
       signal: ac.signal,
-      onStart: () => {},
+      onStart: (serverUserMsg) => {
+        if (serverUserMsg) {
+          set((state) => ({
+            messages: state.messages.map((m) =>
+              (m._id === messageId || m.id === messageId) ? serverUserMsg : m
+            ),
+          }));
+        }
+      },
       onToken: (token) => {
         set((state) => ({
           streamingText: state.streamingText + token,
@@ -360,7 +417,7 @@ export const useChatStore = create((set, get) => ({
         };
 
         set((state) => ({
-          messages: [...state.messages, finalAiMsg],
+          messages: [...truncatedMessages, finalAiMsg],
           isStreaming: false,
           streamingText: '',
           streamingCitations: [],

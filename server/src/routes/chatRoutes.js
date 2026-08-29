@@ -31,6 +31,16 @@ router.post(
   chatController.submitFeedback
 );
 
+router.put(
+  '/messages/:messageId/edit-stream',
+  [
+    param('messageId').notEmpty().withMessage('Message ID is required.'),
+    body('text').trim().notEmpty().withMessage('Query text cannot be empty.'),
+    body('department').optional().isString(),
+  ],
+  chatController.editMessageStream
+);
+
 router.delete('/threads/:threadId', chatController.deleteThread);
 
 module.exports = router;

@@ -268,11 +268,124 @@ const deleteThread = async (req, res, next) => {
   }
 };
 
+// Edit existing user message, prune subsequent replies, and regenerate answer with streaming
+const editMessageStream = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: errors.array()[0].msg,
+      });
+    }
+
+    const { messageId } = req.params;
+    const { text, department } = req.body;
+    const user = req.user;
+
+    let targetMsg = null;
+    let threadId = null;
+
+    if (!isInMemoryFallback()) {
+      targetMsg = await ChatMessage.findById(messageId);
+      if (!targetMsg) {
+        return res.status(404).json({ success: false, error: 'Target message not found.' });
+      }
+      threadId = targetMsg.threadId;
+
+      // 1. Delete all subsequent messages created after targetMsg
+      await ChatMessage.deleteMany({
+        threadId,
+        createdAt: { $gt: targetMsg.createdAt },
+      });
+
+      // 2. Update target user message text
+      targetMsg.text = text;
+      targetMsg.department = department || targetMsg.department || 'general';
+      targetMsg.updatedAt = new Date();
+      await targetMsg.save();
+
+      // If title needs update
+      const cleanTitle = (text || '')
+        .replace(/\[Attached Document:.*?\]\s*/g, '')
+        .replace(/[\r\n]+/g, ' ')
+        .trim();
+      const formattedTitle = cleanTitle.length > 38 ? cleanTitle.substring(0, 35) + '...' : cleanTitle;
+      if (formattedTitle) {
+        const threadDoc = await ChatThread.findById(threadId);
+        if (threadDoc && (threadDoc.title === 'New Academic Query' || !threadDoc.title)) {
+          threadDoc.title = formattedTitle;
+          await threadDoc.save();
+        }
+      }
+    } else {
+      for (const [tId, msgs] of inMemoryMessages.entries()) {
+        const idx = msgs.findIndex((m) => m._id === messageId || m.id === messageId);
+        if (idx !== -1) {
+          threadId = tId;
+          targetMsg = msgs[idx];
+          targetMsg.text = text;
+          targetMsg.department = department || targetMsg.department || 'general';
+          targetMsg.updatedAt = new Date();
+
+          // Prune all messages after this index
+          const pruned = msgs.slice(0, idx + 1);
+          inMemoryMessages.set(tId, pruned);
+          break;
+        }
+      }
+      if (!targetMsg) {
+        return res.status(404).json({ success: false, error: 'Target message not found.' });
+      }
+    }
+
+    // Set up SSE Stream
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    // Send initial start event with updated user message
+    res.write(`data: ${JSON.stringify({ type: 'start', userMessage: targetMsg })}\n\n`);
+
+    const ragResult = await executeRagPipeline({
+      threadId,
+      userQuery: text,
+      preferredDepartment: department || 'all',
+      user,
+      onToken: (token) => {
+        res.write(`data: ${JSON.stringify({ type: 'token', token })}\n\n`);
+      },
+    });
+
+    res.write(
+      `data: ${JSON.stringify({
+        type: 'complete',
+        message: ragResult.message,
+        confidenceScore: ragResult.confidenceScore,
+        wasGrounded: ragResult.wasGrounded,
+        citations: ragResult.citations,
+        responseTimeMs: ragResult.responseTimeMs,
+      })}\n\n`
+    );
+
+    res.write('data: [DONE]\n\n');
+    return res.end();
+  } catch (error) {
+    if (res.headersSent) {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+      return res.end();
+    }
+    next(error);
+  }
+};
+
 module.exports = {
   getThreads,
   createThread,
   getThreadMessages,
   sendMessage,
+  editMessageStream,
   submitFeedback,
   deleteThread,
 };
