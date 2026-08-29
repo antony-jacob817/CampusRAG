@@ -7,6 +7,7 @@ export const streamChatMessage = async ({
   threadId,
   text,
   department = 'all',
+  signal,
   onStart,
   onToken,
   onComplete,
@@ -27,6 +28,7 @@ export const streamChatMessage = async ({
         department,
         stream: true,
       }),
+      signal,
     });
 
     if (!response.ok) {
@@ -76,6 +78,10 @@ export const streamChatMessage = async ({
       }
     }
   } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log('[SSE] Stream aborted by user.');
+      return;
+    }
     if (onError) {
       onError(err);
     } else {

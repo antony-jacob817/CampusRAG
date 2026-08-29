@@ -13,6 +13,7 @@ export const useChatStore = create((set, get) => ({
   streamingText: '',
   streamingCitations: [],
   streamingConfidence: null,
+  abortController: null,
   
   // Interactive citation viewer state
   selectedCitation: null,
@@ -23,6 +24,42 @@ export const useChatStore = create((set, get) => ({
   error: null,
 
   setSelectedDepartment: (dept) => set({ selectedDepartment: dept }),
+
+  // Stop active AI generation in-place
+  stopGenerating: () => {
+    const ac = get().abortController;
+    if (ac) {
+      ac.abort();
+    }
+    const currentStreamingText = get().streamingText;
+    const thread = get().activeThread;
+    if (currentStreamingText && thread) {
+      const partialAiMsg = {
+        _id: `ai-${Date.now()}`,
+        id: `ai-${Date.now()}`,
+        threadId: thread._id || thread.id,
+        sender: 'ai',
+        text: currentStreamingText,
+        confidenceScore: 0.9,
+        wasGrounded: true,
+        citations: [],
+        department: get().selectedDepartment,
+        createdAt: new Date().toISOString(),
+      };
+      set((state) => ({
+        messages: [...state.messages, partialAiMsg],
+        isStreaming: false,
+        streamingText: '',
+        abortController: null,
+      }));
+    } else {
+      set({
+        isStreaming: false,
+        streamingText: '',
+        abortController: null,
+      });
+    }
+  },
 
   openCitationDrawer: (citation) => {
     set({
@@ -76,6 +113,13 @@ export const useChatStore = create((set, get) => ({
 
   // Select active thread and load messages
   selectThread: async (threadId) => {
+    // If currently streaming on THIS thread, preserve the live stream and don't wipe it
+    const currentThread = get().activeThread;
+    const currentId = currentThread?._id || currentThread?.id;
+    if (currentId === threadId && get().isStreaming) {
+      return;
+    }
+
     set({ isLoadingMessages: true, error: null });
     try {
       const res = await api.get(`/chat/threads/${threadId}`);
@@ -136,6 +180,8 @@ export const useChatStore = create((set, get) => ({
       createdAt: new Date().toISOString(),
     };
 
+    const ac = new AbortController();
+
     set((state) => ({
       threads: state.threads.map((t) =>
         (t._id || t.id) === threadId ? { ...t, title: thread.title } : t
@@ -146,6 +192,7 @@ export const useChatStore = create((set, get) => ({
       streamingText: '',
       streamingCitations: [],
       streamingConfidence: null,
+      abortController: ac,
       error: null,
     }));
 
@@ -157,6 +204,7 @@ export const useChatStore = create((set, get) => ({
       threadId,
       text: queryPayload,
       department,
+      signal: ac.signal,
       onStart: (userMsg) => {
         // Replace temp msg with confirmed server userMsg
         if (userMsg) {
@@ -237,6 +285,8 @@ export const useChatStore = create((set, get) => ({
       thread = { ...thread, title: newTitle };
     }
 
+    const ac = new AbortController();
+
     set((state) => ({
       threads: state.threads.map((t) =>
         (t._id || t.id) === threadId ? { ...t, title: thread.title } : t
@@ -247,6 +297,7 @@ export const useChatStore = create((set, get) => ({
       streamingText: '',
       streamingCitations: [],
       streamingConfidence: null,
+      abortController: ac,
       error: null,
     }));
 
@@ -258,6 +309,7 @@ export const useChatStore = create((set, get) => ({
       threadId,
       text: queryPayload,
       department,
+      signal: ac.signal,
       onStart: () => {},
       onToken: (token) => {
         set((state) => ({

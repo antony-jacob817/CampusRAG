@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Send, Paperclip, Loader2, FileText, Image as ImageIcon, X } from 'lucide-react';
+import { Send, Paperclip, Loader2, FileText, Image as ImageIcon, X, Square } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore';
 
 const DEPARTMENT_LABELS = {
@@ -18,7 +18,7 @@ export default function ChatInput({ placeholder = 'Ask any campus regulation or 
   const [attachedFile, setAttachedFile] = useState(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
-  const { sendMessageStream, isStreaming, selectedDepartment } = useChatStore();
+  const { sendMessageStream, stopGenerating, isStreaming, selectedDepartment } = useChatStore();
 
   const activeDeptLabel = DEPARTMENT_LABELS[selectedDepartment || 'all'] || 'All Departments';
 
@@ -191,19 +191,27 @@ export default function ChatInput({ placeholder = 'Ask any campus regulation or 
             style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
           />
 
-          {/* Send Button */}
-          <button
-            type="submit"
-            disabled={(!input.trim() && !attachedFile) || isStreaming}
-            className="w-9 h-9 rounded-full bg-[#059669] dark:bg-[#10B981] text-white dark:text-[#090D16] hover:bg-[#047857] dark:hover:bg-[#059669] disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-[#10B981]/25 transition transform active:scale-95 flex items-center justify-center shrink-0 ml-2"
-            title="Send query (Enter)"
-          >
-            {isStreaming ? (
-              <Loader2 className="w-4 h-4 animate-spin text-white dark:text-[#090D16]" />
-            ) : (
+          {/* Send / Stop Generation Button */}
+          {isStreaming ? (
+            <button
+              type="button"
+              onClick={stopGenerating}
+              className="w-9 h-9 rounded-full bg-rose-500 hover:bg-rose-600 text-white shadow-md shadow-rose-500/25 transition transform active:scale-95 flex items-center justify-center shrink-0 ml-2 animate-fade-in"
+              title="Stop generating (Esc)"
+              aria-label="Stop generating"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={(!input.trim() && !attachedFile) || isStreaming}
+              className="w-9 h-9 rounded-full bg-[#059669] dark:bg-[#10B981] text-white dark:text-[#090D16] hover:bg-[#047857] dark:hover:bg-[#059669] disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-[#10B981]/25 transition transform active:scale-95 flex items-center justify-center shrink-0 ml-2"
+              title="Send query (Enter)"
+            >
               <Send className="w-4 h-4" />
-            )}
-          </button>
+            </button>
+          )}
         </div>
       </form>
     </div>
