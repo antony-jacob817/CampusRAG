@@ -1,0 +1,186 @@
+@import 'katex/dist/katex.min.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #F8FAFC; /* Frost White */
+    --foreground: #0F172A; /* Slate Black */
+    --card: #FFFFFF;       /* Pure White */
+    --border: #E2E8F0;     /* Soft Slate Border */
+    --input: #F1F5F9;      /* Light Gray Wash */
+    --muted: #64748B;      /* Muted Slate */
+    --accent: #059669;     /* Crisp Jade */
+    --secondary: #4F46E5;  /* Deep Indigo */
+  }
+
+  .dark {
+    --background: #090D16; /* Deep Obsidian */
+    --foreground: #F9FAFB; /* Ghost White */
+    --card: #111827;       /* Dark Slate Card */
+    --border: #1F2937;     /* Muted Stroke */
+    --input: #0F172A;      /* Deep Charcoal */
+    --muted: #9CA3AF;      /* Cool Gray */
+    --accent: #10B981;     /* Electric Emerald */
+    --secondary: #6366F1;  /* Vivid Indigo */
+  }
+
+  html {
+    background-color: #F8FAFC;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
+  html.dark {
+    background-color: #090D16;
+  }
+
+  body {
+    @apply bg-[#F8FAFC] text-[#0F172A] dark:bg-[#090D16] dark:text-[#F9FAFB] bg-tech-grid antialiased min-h-screen font-sans selection:bg-[#10B981]/30 selection:text-[#10B981];
+  }
+}
+
+/* Sleek Micro-Dot Studio Canvas Pattern (Linear / Raycast Developer Style) */
+.bg-tech-grid, .bg-dot-matrix {
+  background-image: 
+    radial-gradient(rgba(203, 213, 225, 0.75) 1.25px, transparent 1.25px);
+  background-size: 24px 24px;
+}
+
+.dark .bg-tech-grid, html.dark .bg-tech-grid, body.dark .bg-tech-grid,
+.dark .bg-dot-matrix, html.dark .bg-dot-matrix, body.dark .bg-dot-matrix {
+  background-image: 
+    radial-gradient(rgba(75, 85, 99, 0.35) 1.25px, transparent 1.25px);
+  background-size: 24px 24px;
+}
+
+/* 60fps Glitch-Free View Transition (VitePress/Tailwind Standard) */
+::view-transition-group(root) {
+  animation-duration: 0.4s;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+  display: block;
+  height: 100%;
+  width: 100%;
+  overflow: clip;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 99999;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.35);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(31, 41, 55, 0.9);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.6);
+}
+
+/* Glassmorphic elements */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Markdown styling in chat */
+.prose-chat p {
+  margin-bottom: 0.75rem;
+  line-height: 1.625;
+}
+
+.prose-chat p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-chat ul, .prose-chat ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-chat li {
+  margin-bottom: 0.375rem;
+}
+
+.prose-chat strong {
+  color: inherit;
+  font-weight: 600;
+}
+
+.prose-chat table {
+  width: 100%;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.prose-chat th, .prose-chat td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #E2E8F0;
+}
+
+.dark .prose-chat th, .dark .prose-chat td {
+  border: 1px solid #1F2937;
+}
+
+.prose-chat th {
+  background: rgba(5, 150, 105, 0.08);
+  font-weight: 600;
+}
+
+.dark .prose-chat th {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+}
+
+/* Blinking cursor for streaming */
+.streaming-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 15px;
+  background-color: #10B981;
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: blink 0.8s infinite;
+}
+
+.light .streaming-cursor {
+  background-color: #059669;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
