@@ -133,13 +133,11 @@ Please provide a direct, verified answer backed strictly by the context above:`;
       if (!googleGenAI) googleGenAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
       
       const candidateModels = [
-        'gemini-3.5-flash',
-        'gemini-3.7-flash',
-        'gemini-3.6-flash',
-        'gemini-2.5-flash-lite',
         'gemini-2.0-flash',
         'gemini-2.0-flash-lite',
-        'gemini-2.5-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-1.5-pro',
       ];
 
       for (const modelName of candidateModels) {
@@ -148,11 +146,29 @@ Please provide a direct, verified answer backed strictly by the context above:`;
           let modelResponseText = '';
 
           if (onToken) {
-            const streamResult = await model.generateContentStream(promptWithContext);
-            for await (const chunk of streamResult.stream) {
-              const chunkText = chunk.text();
-              modelResponseText += chunkText;
-              onToken(chunkText);
+            try {
+              const streamResult = await model.generateContentStream(promptWithContext);
+              // Suppress unhandled background stream promise error
+              streamResult.response.catch(() => {});
+
+              for await (const chunk of streamResult.stream) {
+                const chunkText = chunk.text();
+                if (chunkText) {
+                  modelResponseText += chunkText;
+                  onToken(chunkText);
+                }
+              }
+            } catch (streamErr) {
+              console.warn(`[RAGService] Streaming failed on model '${modelName}': ${streamErr.message}. Generating full content fallback...`);
+              const result = await model.generateContent(promptWithContext);
+              modelResponseText = result.response.text();
+              if (modelResponseText) {
+                const words = modelResponseText.split(' ');
+                for (const w of words) {
+                  onToken(w + ' ');
+                  await new Promise((r) => setTimeout(r, 10));
+                }
+              }
             }
           } else {
             const result = await model.generateContent(promptWithContext);

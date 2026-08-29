@@ -142,7 +142,7 @@ const startServer = async () => {
       process.exit(1);
     });
 
-    // Graceful process termination
+    // Graceful process termination & crash prevention
     const handleShutdown = () => {
       server.close(() => {
         process.exit(0);
@@ -150,6 +150,14 @@ const startServer = async () => {
     };
     process.on('SIGINT', handleShutdown);
     process.on('SIGTERM', handleShutdown);
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.warn('[Server] Caught asynchronous rejection:', reason?.message || reason);
+    });
+
+    process.on('uncaughtException', (err) => {
+      console.error('[Server] Caught uncaught exception:', err?.message || err);
+    });
 
     return server;
   } catch (error) {
