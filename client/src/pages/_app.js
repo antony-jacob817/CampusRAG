@@ -7,6 +7,12 @@ import { useChatStore } from '../store/chatStore';
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
+  const initAuth = useAuthStore((state) => state.initAuth);
+
+  // Initialize and hydrate authentication state on application load/refresh
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
 
   // Global Shift + Q listener active across the entire platform
   useEffect(() => {

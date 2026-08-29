@@ -111,6 +111,14 @@ export const useChatStore = create((set, get) => ({
 
     const threadId = thread._id || thread.id;
 
+    // Auto-update thread title in sidebar if currently default
+    const displayQuery = (queryText || (attachment ? `Analysis: ${attachment.name}` : '')).trim();
+    const newTitle = displayQuery.length > 38 ? displayQuery.substring(0, 35) + '...' : displayQuery;
+
+    if (newTitle && (thread.title === 'New Academic Query' || !thread.title)) {
+      thread = { ...thread, title: newTitle };
+    }
+
     // Optimistically add user message to UI with attachment info
     const tempUserMsg = {
       _id: `temp-${Date.now()}`,
@@ -129,6 +137,10 @@ export const useChatStore = create((set, get) => ({
     };
 
     set((state) => ({
+      threads: state.threads.map((t) =>
+        (t._id || t.id) === threadId ? { ...t, title: thread.title } : t
+      ),
+      activeThread: thread,
       messages: [...state.messages, tempUserMsg],
       isStreaming: true,
       streamingText: '',

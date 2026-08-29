@@ -129,6 +129,28 @@ const sendMessage = async (req, res, next) => {
       inMemoryMessages.set(threadId, msgs);
     }
 
+    // Auto-update thread title from initial user query if default
+    const cleanTitle = (text || '')
+      .replace(/\[Attached Document:.*?\]\s*/g, '')
+      .replace(/[\r\n]+/g, ' ')
+      .trim();
+    const formattedTitle = cleanTitle.length > 38 ? cleanTitle.substring(0, 35) + '...' : cleanTitle;
+
+    if (formattedTitle) {
+      if (!isInMemoryFallback()) {
+        const threadDoc = await ChatThread.findById(threadId);
+        if (threadDoc && (threadDoc.title === 'New Academic Query' || !threadDoc.title)) {
+          threadDoc.title = formattedTitle;
+          await threadDoc.save();
+        }
+      } else {
+        const threadDoc = inMemoryThreads.get(threadId);
+        if (threadDoc && (threadDoc.title === 'New Academic Query' || !threadDoc.title)) {
+          threadDoc.title = formattedTitle;
+        }
+      }
+    }
+
     // If client requested SSE streaming
     if (stream && req.headers.accept?.includes('text/event-stream')) {
       res.setHeader('Content-Type', 'text/event-stream');
