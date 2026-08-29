@@ -133,32 +133,40 @@ Please provide a direct, verified answer backed strictly by the context above:`;
       if (!googleGenAI) googleGenAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
       
       const candidateModels = [
-        'gemini-3.7-flash',
-        'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
         'gemini-3.5-flash',
+        'gemini-3.7-flash',
         'gemini-3.6-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-2.0-flash',
+        'gemini-2.0-flash-lite',
+        'gemini-2.5-flash',
       ];
 
       for (const modelName of candidateModels) {
         try {
           const model = googleGenAI.getGenerativeModel({ model: modelName });
+          let modelResponseText = '';
 
           if (onToken) {
             const streamResult = await model.generateContentStream(promptWithContext);
             for await (const chunk of streamResult.stream) {
               const chunkText = chunk.text();
-              responseText += chunkText;
+              modelResponseText += chunkText;
               onToken(chunkText);
             }
           } else {
             const result = await model.generateContent(promptWithContext);
-            responseText = result.response.text();
+            modelResponseText = result.response.text();
           }
-          generated = true;
-          break;
+
+          if (modelResponseText && modelResponseText.trim().length > 0) {
+            responseText = modelResponseText;
+            generated = true;
+            console.log(`[RAGService] Successfully generated grounded response with model '${modelName}'.`);
+            break;
+          }
         } catch (geminiErr) {
-          console.warn(`[RAGService] Gemini model '${modelName}' attempt failed: ${geminiErr.message}. Trying next candidate...`);
+          console.warn(`[RAGService] Gemini model '${modelName}' failed/rate-limited: ${geminiErr.message}. Cascading to next candidate model...`);
         }
       }
     }
