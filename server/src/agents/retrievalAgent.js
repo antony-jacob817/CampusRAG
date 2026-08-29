@@ -1,7 +1,7 @@
 const { generateEmbedding } = require('../services/embeddingService');
 const { queryVectorDb } = require('../services/vectorService');
 
-const MIN_SIMILARITY_THRESHOLD = 0.65;
+const MIN_SIMILARITY_THRESHOLD = 0.50;
 
 /**
  * Retrieval Agent:

@@ -10,6 +10,8 @@ export default function MyApp({ Component, pageProps }) {
 
   // Global Shift + Q listener active across the entire platform
   useEffect(() => {
+    let isCreatingThread = false;
+
     const handleGlobalKeyDown = async (e) => {
       // If typing inside an input or textarea, let the user type 'Q' normally
       const activeTag = document.activeElement?.tagName?.toLowerCase();
@@ -20,9 +22,12 @@ export default function MyApp({ Component, pageProps }) {
 
       if (e.shiftKey && (e.key === 'Q' || e.key === 'q')) {
         e.preventDefault();
+        if (isCreatingThread) return;
+        isCreatingThread = true;
         
         const { user } = useAuthStore.getState();
         if (!user) {
+          isCreatingThread = false;
           router.push('/login');
           return;
         }
@@ -38,8 +43,10 @@ export default function MyApp({ Component, pageProps }) {
           setTimeout(() => {
             const chatInput = document.getElementById('campus-query-input') || document.querySelector('textarea');
             chatInput?.focus();
-          }, 150);
+            isCreatingThread = false;
+          }, 200);
         } catch (err) {
+          isCreatingThread = false;
           console.error('Failed to create academic thread on Shift+Q shortcut:', err);
           router.push('/chat');
         }

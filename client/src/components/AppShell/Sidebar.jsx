@@ -33,21 +33,7 @@ export default function Sidebar({ isOpen, onClose }) {
     }
   }, [user, fetchThreads]);
 
-  // Global Shift + Q keyboard shortcut
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const activeTag = document.activeElement?.tagName?.toLowerCase();
-      if (activeTag === 'input' || activeTag === 'textarea') return;
 
-      if (e.shiftKey && (e.key === 'Q' || e.key === 'q')) {
-        e.preventDefault();
-        handleNewChat();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   const handleNewChat = async () => {
     try {
