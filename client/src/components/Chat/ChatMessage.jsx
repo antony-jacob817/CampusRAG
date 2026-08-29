@@ -204,7 +204,7 @@ export default function ChatMessage({ message, isStreaming = false }) {
             </div>
           )}
 
-          {/* Inline Edit Mode vs Markdown Render */}
+          {/* Inline Edit Mode vs Markdown / Thinking Loading Animation */}
           {isEditing ? (
             <div className="space-y-2 mt-1">
               <textarea
@@ -239,6 +239,17 @@ export default function ChatMessage({ message, isStreaming = false }) {
                 </button>
               </div>
             </div>
+          ) : isStreaming && (!message.text || message.text.trim().length === 0) ? (
+            <div className="flex items-center space-x-3 py-2 animate-fade-in">
+              <div className="flex items-center space-x-2 bg-[#ECFDF5] dark:bg-[#064E3B]/30 border border-[#A7F3D0] dark:border-[#065F46]/50 px-3 py-1.5 rounded-xl shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-bounce" />
+                <span className="text-xs font-semibold text-[#059669] dark:text-[#10B981] ml-1.5">
+                  Retrieving regulations & synthesizing answer...
+                </span>
+              </div>
+            </div>
           ) : (
             <div className="prose-chat text-xs sm:text-sm text-[#0F172A] dark:text-[#F9FAFB] leading-relaxed break-words">
               <ReactMarkdown
@@ -247,7 +258,9 @@ export default function ChatMessage({ message, isStreaming = false }) {
               >
                 {message.text || ''}
               </ReactMarkdown>
-              {isStreaming && <span className="streaming-cursor" />}
+              {isStreaming && (
+                <span className="inline-block w-1.5 h-4 ml-1 bg-[#10B981] animate-pulse align-middle rounded-xs" />
+              )}
             </div>
           )}
 
